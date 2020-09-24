@@ -1,20 +1,36 @@
-#
+import logging
+
 # Luc Garabrant 04/25/2019
 #
 # This program will simulate battleship.
 #
-#
-def gameboard(level): #this function creates our initial board
-    boardsize = 10 + (level - 1) * 2
+
+def gameboard(level):
+    """
+    This function will generate a gameboard, determined by the level size parameter.
+
+    To keep the rows equivalent for both the user and the player, the board_size is 
+    guarenteed to be a multiple of two.
+
+    Parameters:
+    -----------
+    level: required parameter. Level determines the size of the gameboard.
+    """
+
+    #To keep the number of rows symmetrical, we need to always increase the board size by a factor of 2
+    board_size = 10 + level * 2
     board = []
-    for i in range(boardsize):
-        rowB = []
-        for g in range(boardsize):
-            if boardsize // 2 > i:
-                rowB.append('.')
-            else:
-                rowB.append('*')
-        board.append(rowB)
+
+    #Create each row of the gameboard by iterating through its size.
+    for row_index in range(1,board_size + 1):
+
+        #for half of the genereated rows, denote column entries with periods.
+        #for the other half, user asterisks. 
+        if row_index <= board_size / 2:
+            board.append(["."] * board_size)
+        else:
+            board.append(["*"] * board_size) 
+
     return(board)
 
 def display(gboard): #this function displays our board
@@ -252,29 +268,46 @@ def computerWin(gameboard):
         return True
     else:
         return False
-                
+
+def is_input(level: str) -> bool:
+
+    #Check if the input is between 1 and 9. If its not, return False, else return true
+
+    try:
+        if int(level) >= 0 and int(level) <= 9:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+def place_ships(ships: list):
+    return None
 
 
 def main():
+
+    logging.basicConfig(level = logging.DEBUG,format = '%(asctime)s - %(levelname)s - %(message)s')
     ships = ['aircraft carrier','battleship','cruiser','submarine','destroyer']
     shipCode = ['a','b','c','s','d']
+    #ships_dict = {"aircraft carrier":5, "battleship": 4,"cruiser":3,"submarine":3,"destroyer":2}
     shiplen = [5,4,3,3,2]
     cont = True
 
     while cont == True:
         
-        print('This program will play the game of Battleship against an opponent.\nNine levels of play are provided.')
-        print()
-        level = input('Enter level of play (1-9): ')
-        while not level.isdigit() or int(level)<1 or int(level)>9:
-            level = input('Invalid input. Enter level of play (1-9): ')
+        print('This program will play the game of Battleship against an opponent.\nNine levels of play are provided.\n')
+        level = input('Enter level of play (0-9): ')
+
+        while not is_input(level):
+            level = input('Invalid input. Enter level of play (0-9): ')
+
         level = int(level)
         gBoard = gameboard(level)
         computerShips = computerS(gBoard)
         display(computerShips)
         
-        print()
-        print('Enter the loaction of each ship of specified size (e.g., A1:A5)')
+        print("\nEnter the loaction of each ship of specified size (e.g., A1:A5)")
 
         shiploc = []
         for ship in ships:
@@ -365,6 +398,8 @@ def main():
             
                     
                     
-
+if __name__ == "__main__":
+    print("Hello, world!")
+    main()
         
         
