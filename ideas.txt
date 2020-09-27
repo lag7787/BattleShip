@@ -1,0 +1,13 @@
+Random ship placement:
+    iterate through each ship
+    randomly decide how its oriented
+
+    How should I implement the ship placement? should I 
+    1. generate a data strucutre containing all possibe placements? 
+        trade-offs: runtime complexity O(n^2) where n is the size of a row/column 
+        this would put is to n^3 runtime, which is not ideal
+
+    2. geneate random spots and potentially check for collisions?
+        best case its constant time. a much better solution than out previous 
+        how should I check for collision with other ships? 
+        make a meory trade off: store the positions of past ships in a data strucutre?
