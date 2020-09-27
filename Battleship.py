@@ -1,5 +1,6 @@
 import logging
 import random
+from ship import Ship
 
 # Luc Garabrant 04/25/2019
 #
@@ -64,11 +65,56 @@ def place_computer_ships(gboard: list, ships_dict: dict) -> list:
     """
     The function will randomly place the computer's ships and return the final gameboard to the user.
 
-    git
-
     """
-    return None
-   
+    placed_ships = []
+
+    for ship in ships_dict:
+
+        placed = False
+
+        while not placed:
+
+           random_coords = generate_coords(len(gboard),ship)
+            if !collision(random_coords,placed_ships):
+                #placeships
+                placed_ships.append(ship)
+                placed = True
+
+def collision(coords: list, placed_ships: list):
+    
+    collision = False
+    index = 0
+
+    while not collision and len(placed_ships) != 0:
+        cur = placed_ships.pop()
+        intersect(coords,cur)
+
+        #Potentially implement the point class?
+
+
+
+
+            
+def generate_coords(board_size: int, ship: Ship):
+    #coords can either be horizontally or vertically oriented. our first job is to determine 
+    choices = {"horizontal":1,"vertical":2}
+    orientation = random.choice(choices[horizontal],choices[vertical])
+
+    #generate 3 numbers, two of which are colinear
+    #decide which axis is colinear at the end
+
+    cord_1 = random.randrange(1,board_size+1)
+    cord3 = randomrandrange(1,board_size + 1)
+    cord4 = 0
+    if cord3 + (ship.size - 1) > board_size:
+        cord4 = cord3
+        cord3 -= ship.size - 1
+
+    if orientation == choices["horizontal"]:
+        return [(cord3,cord1),(cord4,cord1)]
+
+    else:
+        return [(cord1,cord3),(cord1,cord4)]
 
 def isValid(coordinates,gameboard,shiplen):
 
@@ -227,8 +273,8 @@ def main():
 
     logging.basicConfig(level = logging.DEBUG,format = '%(asctime)s - %(levelname)s - %(message)s')
 
-    #Created a dictionary, which will allow me to access data about a ship in constant time.
-    ships_dict = {"aircraft carrier":("a",5), "battleship": ("b",4),"cruiser":("c",3),"submarine":("s",3),"destroyer":("d",2)}
+    #Create a dictionary of ship objects
+    ships_dict = {"aircraft carrier": Ship(5,"a"), "battleship": Ship("b",4),"cruiser":Ship("c",3),"submarine":Ship("s",3),"destroyer":Ship("d",2)}
 
     cont = True
 
