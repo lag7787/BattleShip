@@ -1,4 +1,5 @@
 import logging
+import random
 
 # Luc Garabrant 04/25/2019
 #
@@ -59,78 +60,15 @@ def display(gboard): #this function displays our board
             print()
         row +=1
         
-def computerS(gboard):
-    
-    import random
-    shipSize = [5,4,3,3,2]
-    shipCode = ['a','b','c','s','d']
-    col = len(gboard)
-    rowN = (col // 2)
-    finalBoard = gboard
-    
-    for ship in shipCode:
-        
-        placed = False
-        
-        while placed == False:
-            
-            x = random.randint(1,50)
-            cordS = []                      #creating a list of two random numbers corresponding to the column numer and row number
-            rCol = random.randint(1,col)
-            cordS.append(rCol)
-            rRow = (random.randint(1,rowN)) + rowN  
-            cordS.append(rRow)
-            
-            if x > 25: #place vertically
-                
-                availableSpace = finalBoard[cordS[1]-1:]    #checking the space between the first row in our list and the last row (inclusive) since were placing the ship vertically 
-                y = len(availableSpace)
+def place_computer_ships(gboard: list, ships_dict: dict) -> list:
+    """
+    The function will randomly place the computer's ships and return the final gameboard to the user.
 
-                  
-                if (y) == shipSize[shipCode.index(ship)]:  #check if our available space is equal to the current ship size that were on. 
+    git
 
-                    collision = False         # if so create a variable to check for collision. 
-                    
-                    for tRow in finalBoard[cordS[1]-1:]:    # for each row in the available space
-                            
-                            if tRow[rCol-1] != '*':             # check if the item representing the column number in the list is empty
-                                    collision = True            # if it is not empty, we have collision. 
-                                
-                                
-                    if not collision:                           # if we done have collision, place our ship and iterate to the next ship.
-                        for i in range(cordS[1],col+1):
-                            finalBoard[i-1][rCol-1] = ship
-                            
-                        placed = True
-                
-                    else:
-                        continue
-
-
-            else:       #place horizontally
-                
-                 availableSpace = finalBoard[cordS[1]-1][cordS[0]-1:]   #calculate the amount of avilable space from our start index till the end. 
-                 y = len(availableSpace)
-                
-                 if (y) == shipSize[shipCode.index(ship)]:
-                     
-                    collision = False
-
-                    for item in finalBoard[cordS[1]-1][cordS[0]-1:]: #checking each item in our row to see if its empty. 
-
-                        if item != '*':
-                            collision = True
-
-                    if collision != True:
-                        for i in range(cordS[0],col+1):
-                            finalBoard[cordS[1]-1][i-1] = ship
-
-                        placed = True
-                        
-                    else:
-                        continue         
-                
-    return(finalBoard)
+    """
+    return None
+   
 
 def isValid(coordinates,gameboard,shiplen):
 
@@ -288,10 +226,10 @@ def place_ships(ships: list):
 def main():
 
     logging.basicConfig(level = logging.DEBUG,format = '%(asctime)s - %(levelname)s - %(message)s')
-    ships = ['aircraft carrier','battleship','cruiser','submarine','destroyer']
-    shipCode = ['a','b','c','s','d']
-    #ships_dict = {"aircraft carrier":5, "battleship": 4,"cruiser":3,"submarine":3,"destroyer":2}
-    shiplen = [5,4,3,3,2]
+
+    #Created a dictionary, which will allow me to access data about a ship in constant time.
+    ships_dict = {"aircraft carrier":("a",5), "battleship": ("b",4),"cruiser":("c",3),"submarine":("s",3),"destroyer":("d",2)}
+
     cont = True
 
     while cont == True:
@@ -304,7 +242,7 @@ def main():
 
         level = int(level)
         gBoard = gameboard(level)
-        computerShips = computerS(gBoard)
+        place_computer_ships(gBoard),ships_dict)
         display(computerShips)
         
         print("\nEnter the loaction of each ship of specified size (e.g., A1:A5)")
