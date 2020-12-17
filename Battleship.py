@@ -1,8 +1,8 @@
-import logging
 import random
 from typing import *
 from Ship import Ship
 from Coordinate import Coordinate
+from Orientation import Orientation
 
 # Luc Garabrant 04/25/2019
 #
@@ -85,20 +85,54 @@ def place_computer_ships(gboard: list, ships_dict: dict) -> list:
            if not collision(ship,placed_ships):
                 #placeships
                 placed_ships.append(ship)
+                append_ship(gboard,ship)
                 placed = True
 
+    display(gboard)
 
     print("Displaying ships for manual verification: ")
     for ship in placed_ships:
         print(ship)
 
+def append_ship(gboard: list, ship: Ship):
+
+    #only need start code and size 
+    #well treat horizontal ships and vertical ships differently
+    #can we place in constant time? probably
+    #use the start pos as an offset an iterate x times 
+    
+
+    if ship.orientation == Orientation.VERTICAL:
+
+        start_index = ship.start_coord.row - 1
+        column = ord(ship.start_coord.column) - 65
+        
+        for offset in range(ship.size):
+
+            gboard[start_index + offset][column] = ship.code
+
+
+    else:
+
+        start_index = ord(ship.start_coord.column) - 65
+        row = ship.start_coord.row - 1
+
+        for offset in range(ship.size):
+
+            gboard[row][start_index + offset] = ship.code
+
+
 def collision(new_ship: Ship, placed_ships: list) -> bool:
 
     collision = False
+    #print(f"New Attempt:\n{new_ship}")
 
     for placed_ship in placed_ships: 
 
-        if new_ship.isHorizontal and placed_ship.isHorizontal:
+        #print(f"checking against:\n{placed_ship}")
+
+        if new_ship.orientation == Orientation.HORIZONTAL and placed_ship.orientation == Orientation.HORIZONTAL:
+            #print("both ships are horizontal")
             #check of horizonta collison
             if new_ship.start_coord.row == placed_ship.start_coord.row:
 
@@ -112,7 +146,9 @@ def collision(new_ship: Ship, placed_ships: list) -> bool:
                     collision = True
                     break
 
-        elif new_ship.isVertical and placed_ship.isVertical:
+        elif new_ship.orientation == Orientation.VERTICAL and placed_ship.orientation == Orientation.VERTICAL:
+            #print("both ships are vertical")
+    #two cases for overlap in 
 
             if new_ship.start_coord.column == placed_ship.start_coord.column:
 
@@ -133,51 +169,55 @@ def collision(new_ship: Ship, placed_ships: list) -> bool:
             #can we check if a cell is in a line in constant time? 
             #yes the coordinates just have to be within the range of both lines
 
+          #  print("ships have different orientations")
+
             target_coord = Coordinate()
 
             vertical_ship = None
             horizontal_ship = None
 
-            if new_ship.isVertical:
+            if new_ship.orientation == Orientation.VERTICAL:
 
                 vertical_ship = new_ship
                 horizontal_ship = placed_ship
 
-                target_coord.column = new_ship.start_coord.column
-                target_coord.row = placed_ship.start_coord.row
-
             else:
 
                 vertical_ship = placed_ship
-                horizontal_ship = vertical_ship
+                horizontal_ship = new_ship
 
-                target_coord.column = placed_ship.start_coord.column
-                target_coord.row = new_ship.start_coord.row
+            target_coord.column = vertical_ship.start_coord.column
+            target_coord.row = horizontal_ship.start_coord.row
 
             #check if target coord in contained within new_ship
+            #if they intersect then they both share this coordinate
+            #which would be the row of the horizontal ship and col of vertical ship
 
-            if not (target_coord.column == vertical_ship.start_coord.column and \
+            if  (target_coord.column == vertical_ship.start_coord.column and \
                 vertical_ship.start_coord.row <= target_coord.row and \
                 vertical_ship.end_coord.row >= target_coord.row):
 
-                collision = True
-                break
+                if  (target_coord.row == horizontal_ship.start_coord.row and \
+                    horizontal_ship.end_coord.column >= target_coord.column and \
+                    horizontal_ship.start_coord.column <= target_coord.column):
 
-            elif not (target_coord.row == horizontal_ship.start_coord.row and \
-                horizontal_ship.end_coord.column >= target_coord.column and \
-                horizontal_ship.start_coord.column <= target_coord.column):
+                    collision = True
+                    break
 
-                collision = True
-                break
+
+   # if collision:
+   #     print("failed to place ships\n")
+   # else:
+   #     print("ship placed succesfully\n")
 
     return collision
 
 def generate_coords(board_size: int, size: int) -> tuple:
 
     #make a radom choice, representing a selciton beteween two differnet orientations.
-    isHorizontal = bool(random.choice([0,1]))
+    orientation = random.choice([Orientation.VERTICAL,Orientation.HORIZONTAL])
 
-    if isHorizontal:
+    if orientation == Orientation.HORIZONTAL:
 
         x1 = random.randrange(1,board_size + 1)
         x2 = x1 + (int(size) - 1)
@@ -189,14 +229,12 @@ def generate_coords(board_size: int, size: int) -> tuple:
 
         y = random.randrange((board_size // 2) + 1, board_size + 1)
 
-        return (Coordinate(x1,y),Coordinate(x2,y),isHorizontal)
+        return (Coordinate(x1,y),Coordinate(x2,y),orientation)
 
     else:
 
         y1 = random.randrange((board_size // 2) + 1, board_size + 1) 
         y2 = y1 + (int(size) - 1)
-
-        #this code can encroach into the opponenets territory
 
         if y2 > board_size:
             #shoft both of the coordiantes y can be equal to the board size 
@@ -206,7 +244,7 @@ def generate_coords(board_size: int, size: int) -> tuple:
 
         x = random.randrange(1,board_size + 1)
 
-        return (Coordinate(x,y1),Coordinate(x,y2),isHorizontal)
+        return (Coordinate(x,y1),Coordinate(x,y2),orientation)
 
 def isValid(coordinates,gameboard,shiplen):
 
@@ -350,29 +388,11 @@ def is_input(level: str) -> bool:
     except:
         return False
 
-def place_ships(ships: list):
-    return None
-
-
 def main():
 
-    logging.basicConfig(level = logging.DEBUG,format = '%(asctime)s - %(levelname)s - %(message)s')
-
-    #Create a dictionary of ship objects
     ships_dict = {'a' : Ship(5,'a'), 'b': Ship(4,'b'),'c':Ship(3,'c'),'s':Ship(3,'s'),"d":Ship(2,'d')}
-
     myGameBoard = gameboard(0)
     display(myGameBoard)
-
-##    for ship in ships_dict.values():
-##
-##        temp_coords = generate_coords(len(myGameBoard), ship.size)
-##        start = temp_coords[0]
-##        end = temp_coords[1]
-##        orientation = temp_coords[2]
-##
-##        #print(f"Ship info:\nsize: {ship.size}\ncode: {ship.code}\nstart_pos: {start.column}{start.row}\nend_pos {end.column}{end.row}\nisHoriztonal: {orientation}\n")
-
     place_computer_ships(myGameBoard, ships_dict)
 
 
