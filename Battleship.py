@@ -1,3 +1,4 @@
+import sys
 import random
 from typing import *
 from Ship import Ship
@@ -64,7 +65,8 @@ def display(gboard): #this function displays our board
             print()
         row +=1
         
-def place_computer_ships(gboard: list, ships_dict: dict) -> list:
+#may be able to condense place_computer_ships and place_user_ships into the same func
+def place_computer_ships(gboard: list, ships_dict: dict):
     """
     The function will randomly place the computer's ships and return the final gameboard to the user.
 
@@ -83,16 +85,58 @@ def place_computer_ships(gboard: list, ships_dict: dict) -> list:
            ship.set_orientation(random_coords[2])
            
            if not collision(ship,placed_ships):
-                #placeships
                 placed_ships.append(ship)
                 append_ship(gboard,ship)
                 placed = True
 
-    display(gboard)
+def place_user_ships(gboard, ships_dict: dict):
 
-    print("Displaying ships for manual verification: ")
-    for ship in placed_ships:
-        print(ship)
+    #get user to input valid coordinates
+    #validate coordinates (making sure they're in the board and have no collision)
+    #if valid, place the ships
+    #should i retreive the ships one at a time? 
+
+    placed_ships = []
+
+    for ship in ships_dict.values():
+
+        placed = False
+
+        while not placed:
+
+            ship_coords = get_coords(ship, len(gboard))
+            ship.set_start(ship_coords[0])
+            ship.set_end(ship_coords[1])
+            ship.set_orientation(ship_coords[2])
+
+            if not collision(ship,placed_ships):
+                placed_ships.append(ship)
+                append_ship(gboard,ship)
+                placed = True
+                display(gboard)
+            
+#need to make sure that our convention of start coord being the smaller one is maintained
+def get_coords(ship: Ship, board_size: int):
+
+    flag = True
+    prompt_string = f"\nPlease enter valid starting and ending coordiantes (X#:Y#) for a ship of size {ship.size}: "
+
+    while flag:
+        
+        user_input = input(prompt_string)
+        if is_valid(user_input,ship.size, board_size):
+
+           start,end = user_input.split(':')
+           start = Coordinate.fromAlpha(start[0],int(start[1]))
+           end = Coordinate.fromAlpha(end[0],int(end[1]))
+           orientation = Coordinate.get_orientation(start,end)
+           flag = False
+
+        else:
+
+            print("Invalid input. Please try agian.")
+
+    return (start,end,orientation)
 
 def append_ship(gboard: list, ship: Ship):
 
@@ -120,7 +164,6 @@ def append_ship(gboard: list, ship: Ship):
         for offset in range(ship.size):
 
             gboard[row][start_index + offset] = ship.code
-
 
 def collision(new_ship: Ship, placed_ships: list) -> bool:
 
@@ -246,135 +289,117 @@ def generate_coords(board_size: int, size: int) -> tuple:
 
         return (Coordinate(x,y1),Coordinate(x,y2),orientation)
 
-def isValid(coordinates,gameboard,shiplen):
+def is_valid(user_input: str,ship_size: int,board_size: int):
 
-    alpha = 0
-    colonC = 0
-    x = len(gameboard)
-    maxRow = x // 2
-    col = []
-    row = []
+    #need to make sure its within the board range and that it fills the number
+    #of appropriate spaces
 
-    for i in range(1,x+1):
-        col.append(chr(i+64))
-    for i in range(1,x+1):
-        row.append(i)
+    valid = True
+
+    try:
+        start,end = user_input.split(':')
+        start = Coordinate.fromAlpha(start[0],int(start[1]))
+        end = Coordinate.fromAlpha(end[0],int(end[1]))
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        return False
+
+    orientation = Coordinate.get_orientation(start,end)
+    max_column = chr(board_size + 64)
+    min_column = chr(65)
+    max_row = board_size // 2
+    min_row = 1
+    count = 0
+
+    if orientation == Orientation.VERTICAL:
+
+
+        #checking that its within range
+
+        if start.column < min_column or start.column > max_column:
+
+            valid = False
+
+        elif start.row < min_row or end.row > max_row:
+
+            valid = False
+
+        elif end.row - start.row != (ship_size - 1):
+
+            valid = False
         
-    semiC = False
-    for i in coordinates:
-        if i == ':':
-            semiC  = True
-            colonC += 1
-        elif i.isalpha() == True:
-            alpha +=1
-            
-    if alpha > 2:
-        return False
-    elif semiC == False or colonC > 1:
-        return False        
-        
-    start, end = coordinates.split(':')
-    listCords = [start,end]
-    
-    if len(listCords[0]) < 2 or len(listCords[1]) < 2:
-        return False
-    elif listCords[0][1:].isdigit() != True:
-        return False
-    elif listCords[1][1:].isdigit() != True:
-        return False
-    elif (listCords[0][0] not in col) or (listCords[1][0]not in col) or (int(listCords[0][1:]) not in row) or (int(listCords[1][1:]) not in row) :
-        return False
-    elif ((int(listCords[1][1:])) - (int(listCords[0][1:])) + 1 != shiplen) and (ord(listCords[1][0]) - (ord(listCords[0][0])) + 1 != shiplen) :
-        return False
-    elif (listCords[0][0] != listCords[1][0]) and listCords[0][1] != listCords[1][1]:
-        return False
-    elif int(listCords[0][1:]) > maxRow or int(listCords[1][1]) > maxRow:
-        return False
+
+    elif orientation == Orientation.HORIZONTAL:
+
+        if start.column < min_column or end.column > max_column:
+
+            valid = False
+
+        elif start.row < min_row or start.row > max_row:
+
+            valid = False
+
+        elif ord(end.column) - ord(start.column) != (ship_size - 1):
+
+            valid = False
+
     else:
-        return True
+        valid = False
 
-def inAvailable(board):
 
-    rows = len(board) // 2
-    cols = len(board)
-    rowsL = []
-    colL = []
+    return valid
 
-    for rowNum in range(rows+1,(rows+1)+rows):
-        rowsL.append(rowNum)
-    for colNum in range(1,cols+1):
-        colL.append(chr(colNum+64))
+def in_available(gboard):
 
-    return rowsL, colL
+    size = len(gboard)
+    rows = [index + 1 for index in range(size // 2, size)]
+    cols = [chr(index + 65) for index in range(size)]
 
-def userbombing(gameboard):
+    return rows,cols
+    
+def user_bombing(gameboard):
 
-    rowsAvailable, colsAvailable = inAvailable(gameboard)
+    rowsAvailable, colsAvailable = in_available(gameboard)
     bombLoc = input('Enter grid location to bomb (e.g., A4): ')
     col, row = bombLoc[0], bombLoc[1:]          
+    hit = False
 
-    # not checking for digits and alpha
-    
     while (not col.isalpha()) or (not row.isdigit()) or (col not in colsAvailable) or (int(row) not in rowsAvailable) :
-        bombLoc = input('Invalid Input.Enter grid location to bomb (e.g., A4): ')
+        bombLoc = input('Invalid Input. Enter grid location to bomb (e.g., A4): ')
         col, row = bombLoc[0], bombLoc[1:]
         
     if gameboard[int(row) - 1][ord(col) - 65] == '*' :
         print('\n --- NO HIT --- \n')
         
+        
     elif str(gameboard[int(row) - 1][ord(col) - 65]) in ['a','b','c','s','d']:                              
         print('\n *** DIRECT HIT *** \n')
         gameboard[int(row) - 1][ord(col) - 65] = ('-'+gameboard[int(row) - 1][ord(col) - 65]+'-')
+        hit = True
         
     else:
         print('\n *** ALREADY HIT *** \n')
+    
+    return hit
         
-def computerBombing(gameboard):
+def computer_bombing(gameboard):
     import random
 
     computerRowsAvailable = []
-    playerRowsAvailable, colsAvailable = inAvailable(gameboard)
+    playerRowsAvailable, colsAvailable = in_available(gameboard)
+    hit = False
 
     for element in playerRowsAvailable:
-        computerRowsAvailable.append(int(element)-5)
+        computerRowsAvailable.append(int(element) - len(gameboard) // 2)
     
     randCol = chr(random.randint(65,len(colsAvailable)+64))
     randRow = random.randint(1,len(computerRowsAvailable) )
        
     if gameboard[int(randRow) - 1][ord(randCol) - 65] in ['a','b','c','d','s']:
        gameboard[int(randRow) - 1][ord(randCol) - 65] = '-'+gameboard[int(randRow) - 1][ord(randCol) - 65]+'-'
-       
-def playerWin(gameboard):
-    
-    totalShipSize = 17
-    computerShipsHit = 0
-    rowStart = len(gameboard) // 2
+       hit = True
 
-    for row in gameboard[rowStart:]:
-        for element in row:
-            if element in ['-a-','-b-','-c-','-d-','-s-']:
-                computerShipsHit += 1
-                
-    if computerShipsHit == totalShipSize:
-        return True
-    else:
-        return False
-
-def computerWin(gameboard):
-
-    totalShipSize = 17
-    playerShipsHit = 0
-    rowEnd = len(gameboard) // 2
-
-    for row in gameboard[:rowEnd]:
-        for element in row:
-            if element in ['-a-','-b-','-c-','-d-','-s-']:
-                playerShipsHit += 1
-                
-    if playerShipsHit == totalShipSize:
-        return True
-    else:
-        return False
+    return hit
 
 def is_input(level: str) -> bool:
 
@@ -388,16 +413,46 @@ def is_input(level: str) -> bool:
     except:
         return False
 
+def get_input() -> str:
+
+    print("Welcome to Battleship!\n")
+    input_str = input("Which level would you like to play on? Levels range between 0-9: ")
+    if not is_input(input_str):
+        input_str = input("Invalid Input. Please try again: ")
+
+    return input_str
+
 def main():
 
     ships_dict = {'a' : Ship(5,'a'), 'b': Ship(4,'b'),'c':Ship(3,'c'),'s':Ship(3,'s'),"d":Ship(2,'d')}
-    myGameBoard = gameboard(0)
-    display(myGameBoard)
+    level = int(get_input())
+    myGameBoard = gameboard(level)
     place_computer_ships(myGameBoard, ships_dict)
+    display(myGameBoard)
+    place_user_ships(myGameBoard,ships_dict)
+    totalShipSize = 17
+    computerShipsHit = 0
+    playerShipsHit = 0
+    gameover = False
+
+    while not gameover:
+
+        if user_bombing(myGameBoard):
+            computerShipsHit += 1
+
+        if computer_bombing(myGameBoard):
+            playerShipsHit += 1
+
+        if computerShipsHit == totalShipSize:
+            gameover = True
+            print("---YOU WIN!---")
+
+        elif playerShipsHit == totalShipSize:
+            gameover = True
+            print("---YOU LOSE!---")
+
+        display(myGameBoard)
 
 
 if __name__ == "__main__":
     main()
-
-    
-
