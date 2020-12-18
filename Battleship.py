@@ -247,12 +247,6 @@ def collision(new_ship: Ship, placed_ships: list) -> bool:
                     collision = True
                     break
 
-
-   # if collision:
-   #     print("failed to place ships\n")
-   # else:
-   #     print("ship placed succesfully\n")
-
     return collision
 
 def generate_coords(board_size: int, size: int) -> tuple:
